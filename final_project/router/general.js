@@ -1,7 +1,7 @@
 const axios = require("axios");
 const express = require("express");
 
-let books = require("./booksdb.js");
+const localBooks = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 
@@ -50,7 +50,13 @@ public_users.get('/isbn/:isbn', async (req, res) => {
     const response = await axios.get(`${baseURL}/books`);
     const books = response.data;
 
-    return res.status(200).json(books[req.params.isbn]);
+    const book = books[req.params.isbn];
+
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    return res.status(200).json(book);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -100,14 +106,14 @@ public_users.get('/title/:title', async (req, res) => {
 public_users.get("/review/:isbn", (req, res) => {
   const isbn = req.params.isbn;
 
-  if (!books[isbn]) {
+  if (!localBooks[isbn]) {
     return res.status(404).json({
       message: "Book not found",
     });
   }
 
   return res.status(200).json({
-    reviews: books[isbn].reviews || books[isbn].review,
+    reviews: localBooks[isbn].reviews,
   });
 });
 
